@@ -4,6 +4,7 @@ shopt -s nullglob globstar
 
 wl_copy_args=("-o")
 wofi_args=("")
+use_gpaste=
 
 usage() {
 	echo -e "Wofi based interface for pass
@@ -15,11 +16,12 @@ Options:
 	-h	Help
 	-n	Don't use one-time copy (by default copy will be deleted after first paste, but some clients (XWayland) can be break)
 	-p	Use the \"primary\" clipboard instead of the regular clipboard
+    -g  Use gpaste for copying password (it will automatically erase it after sometime)
 	"
 }
 
 
-while getopts ":hpn" option; do
+while getopts ":hpng" option; do
 	echo $option
 	case $option in
 		h )
@@ -32,6 +34,9 @@ while getopts ":hpn" option; do
 		p )
 			wl_copy_args=("${wl_copy_args[@]} -p")
 			;;
+        g )
+            use_gpaste=1
+            ;;
 		\? )
 			usage
 			exit 1
@@ -51,7 +56,12 @@ password=$(printf '%s\n' "${password_files[@]}" | wofi -m -i -p "Password name" 
 
 [[ -n $password ]] || exit
 
-pass show "$password" | head -n1 | wl-copy $wl_copy_args 2>/dev/null
+if [[ -n ${use_gpaste} ]];then
+    gpaste-client add-password ${password} "$(pass show "$password"| head -n1)"
+else
+    pass show "$password" | head -n1 | wl-copy $wl_copy_args 2>/dev/null
+fi
+
 if [[ $? != 0 ]]; then
 	echo "Some error has occured"
 else
