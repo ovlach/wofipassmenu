@@ -51,7 +51,12 @@ password=$(printf '%s\n' "${password_files[@]}" | wofi -m -i -p "Password name" 
 
 [[ -n $password ]] || exit
 
-pass show "$password" | head -n1 | wl-copy $wl_copy_args 2>/dev/null
+if [[ $password == *"otp"* ]]; then
+    pass otp "$password" | head -n1 | wl-copy $wl_copy_args 2>/dev/null
+else
+    pass show "$password" | head -n1 | wl-copy $wl_copy_args 2>/dev/null
+fi
+
 if [[ $? != 0 ]]; then
 	echo "Some error has occured"
 else
